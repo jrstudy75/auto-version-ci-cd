@@ -1,7 +1,7 @@
-# Nome do Workflow# Nome do Workflow
+# Nome do Workflow
 name: Auto Versioning
 
-# Gatilho: Este workflow roda a cada push na branch 'main'
+# Gatilho: Este workflow roda a cada push na branch 'main' [cite: 42]
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ on:
 # Tarefas a serem executadas
 jobs:
   auto-version:
-    # Usar uma máquina virtual Ubuntu, conforme solicitado
+    # Usar uma máquina virtual Ubuntu, conforme solicitado [cite: 43]
     runs-on: ubuntu-latest
 
     steps:
@@ -18,25 +18,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          # Precisamos do token para poder fazer push de volta para o repo
+          # Precisamos do token para poder fazer push de volta para o repo [cite: 47, 48]
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # 2. Lê, incrementa a versão e salva no arquivo
       - name: Increment version
         run: |
-          # Lê a versão atual do arquivo
+          # Lê a versão atual do arquivo [cite: 44]
           current_version=$(cat version.txt)
 
-          # Remove o 'v' inicial e quebra a versão em partes usando o '.' como delimitador
+          # Remove o 'v' inicial e quebra a versão em partes usando o '.' como delimitador [cite: 45]
           IFS='.' read -r -a version_parts <<< "${current_version#v}"
 
-          # Incrementa a última parte (patch) em uma unidade
+          # Incrementa a última parte (patch) em uma unidade [cite: 45]
           version_parts[2]=$((version_parts[2] + 1))
 
           # Monta a nova string de versão
           new_version="v${version_parts[0]}.${version_parts[1]}.${version_parts[2]}"
 
-          # Salva a nova versão no arquivo
+          # Salva a nova versão no arquivo [cite: 45]
           echo $new_version > version.txt
 
           # Disponibiliza a new_version para os próximos passos
@@ -45,75 +45,16 @@ jobs:
       # 3. Realiza o commit e push da nova versão
       - name: Commit and Push new version
         run: |
-          # Configura o usuário do Git para o commit automático
+          # Configura o usuário do Git para o commit automático "CI Bot" [cite: 47]
           git config --global user.name 'CI Bot'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           # Adiciona o arquivo modificado
           git add version.txt
 
-          # Faz o commit apenas se houver mudanças
-          # Isso evita loops de trigger se o bot commitar na main
+          # Faz o commit automático deste arquivo modificado [cite: 47]
+          # (O 'git diff' evita commits em branco e loops de workflow)
           git diff --staged --quiet || git commit -m "chore: Increment version to ${{ env.NEW_VERSION }}"
 
-          # Envia o commit para o repositório remoto
-          git push
-name: Auto Versioning
-
-# Gatilho: Este workflow roda a cada push na branch 'main'
-on:
-  push:
-    branches:
-      - main
-
-# Tarefas a serem executadas
-jobs:
-  auto-version:
-    # Usar uma máquina virtual Ubuntu, conforme solicitado
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1. Clona o repositório para a máquina virtual do Actions
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          # Precisamos do token para poder fazer push de volta para o repo
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # 2. Lê, incrementa a versão e salva no arquivo
-      - name: Increment version
-        run: |
-          # Lê a versão atual do arquivo
-          current_version=$(cat version.txt)
-
-          # Remove o 'v' inicial e quebra a versão em partes usando o '.' como delimitador
-          IFS='.' read -r -a version_parts <<< "${current_version#v}"
-
-          # Incrementa a última parte (patch) em uma unidade
-          version_parts[2]=$((version_parts[2] + 1))
-
-          # Monta a nova string de versão
-          new_version="v${version_parts[0]}.${version_parts[1]}.${version_parts[2]}"
-
-          # Salva a nova versão no arquivo
-          echo $new_version > version.txt
-
-          # Disponibiliza a new_version para os próximos passos
-          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
-
-      # 3. Realiza o commit e push da nova versão
-      - name: Commit and Push new version
-        run: |
-          # Configura o usuário do Git para o commit automático
-          git config --global user.name 'CI Bot'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-          # Adiciona o arquivo modificado
-          git add version.txt
-
-          # Faz o commit apenas se houver mudanças
-          # Isso evita loops de trigger se o bot commitar na main
-          git diff --staged --quiet || git commit -m "chore: Increment version to ${{ env.NEW_VERSION }}"
-
-          # Envia o commit para o repositório remoto
+          # Envia o push da nova versão para a branch main [cite: 48]
           git push
